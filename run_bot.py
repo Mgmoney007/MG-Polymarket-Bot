@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 """
-MG Polymarket Paper Trading Bot — main entry point.
+MG Polymarket Paper Trading Bot - main entry point.
 
-Designed to be called by cron every 15 minutes:
+Linux/macOS - run via cron every 15 minutes:
   */15 * * * * /path/to/venv/bin/python /path/to/run_bot.py >> /path/to/bot.log 2>&1
+
+Windows - run via Task Scheduler every 15 minutes:
+  Use setup_taskscheduler.ps1, or manually create a task that calls:
+  C:\\path\\to\\venv\\Scripts\\python.exe C:\\path\\to\\run_bot.py >> C:\\path\\to\\bot.log 2>&1
 
 What this script does on each run:
   1. Load persisted state (trades.json)
@@ -20,6 +24,15 @@ import os
 import sys
 from datetime import datetime, timezone
 
+# Windows terminals default to cp1252; reconfigure stdout/stderr to UTF-8 so
+# that log output doesn't raise UnicodeEncodeError at runtime.
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except AttributeError:
+        pass  # Python < 3.7 fallback: set PYTHONIOENCODING=utf-8 in env
+
 from polymarket_client import PolymarketClient
 from paper_trader import (
     load_state,
@@ -32,11 +45,11 @@ from paper_trader import (
 from dashboard import generate as generate_dashboard
 
 # ------------------------------------------------------------------
-# Logging — structured single-line format, plays well with log files
+# Logging - structured single-line format, plays well with log files
 # ------------------------------------------------------------------
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s %(levelname)-8s %(name)s — %(message)s",
+    format="%(asctime)s %(levelname)-8s %(name)s - %(message)s",
     datefmt="%Y-%m-%dT%H:%M:%SZ",
     stream=sys.stdout,
 )
@@ -61,7 +74,7 @@ def main() -> None:
     # 2. Check circuit breaker before making any API calls
     if is_circuit_tripped(state):
         log.warning(
-            "Circuit breaker is TRIPPED — no new trades will be opened. "
+            "Circuit breaker is TRIPPED - no new trades will be opened. "
             "Review losses and run: python reset_circuit_breaker.py"
         )
         # Still refresh dashboard so the user sees the tripped status
@@ -73,15 +86,15 @@ def main() -> None:
     try:
         markets = client.get_crypto_updown_markets()
     except Exception as exc:
-        log.error("Failed to fetch markets: %s — aborting run.", exc)
+        log.error("Failed to fetch markets: %s - aborting run.", exc)
         sys.exit(1)
 
     if not markets:
-        log.info("No active crypto Up/Down markets found — nothing to do.")
+        log.info("No active crypto Up/Down markets found - nothing to do.")
         _regenerate_dashboard(state)
         return
 
-    log.info("Processing %d market(s)…", len(markets))
+    log.info("Processing %d market(s)...", len(markets))
 
     # 4. Evaluate each market and act
     for market in markets:
@@ -97,7 +110,7 @@ def main() -> None:
     seen_ids = {m["id"] for m in markets}
     stale_ids = open_ids - seen_ids
     if stale_ids:
-        log.info("Refreshing %d open position(s) not in discovery batch…", len(stale_ids))
+        log.info("Refreshing %d open position(s) not in discovery batch...", len(stale_ids))
         for market_id in stale_ids:
             try:
                 fresh = client.refresh_market_price(market_id)

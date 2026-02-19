@@ -23,7 +23,7 @@ def generate(state_path: str = DEFAULT_STATE_FILE, output_path: str = OUTPUT_FIL
     state = load_state(state_path)
     stats = compute_stats(state)
     html = _render(state, stats)
-    with open(output_path, "w") as fh:
+    with open(output_path, "w", encoding="utf-8") as fh:
         fh.write(html)
     print(f"Dashboard written to {output_path}")
 
@@ -58,13 +58,13 @@ def _circuit_badge(cb: dict) -> str:
     if cb["tripped"]:
         tripped_at = cb.get("tripped_at", "unknown")
         return (
-            f'<span class="badge badge-danger">TRIPPED — {cb["consecutive_losses"]} '
+            f'<span class="badge badge-danger">TRIPPED &mdash; {cb["consecutive_losses"]} '
             f'consecutive losses (since {tripped_at})</span>'
         )
     losses = cb["consecutive_losses"]
     colour = "badge-warning" if losses >= 2 else "badge-ok"
     return (
-        f'<span class="badge {colour}">Active — {losses} / 3 consecutive losses</span>'
+        f'<span class="badge {colour}">Active &mdash; {losses} / 3 consecutive losses</span>'
     )
 
 

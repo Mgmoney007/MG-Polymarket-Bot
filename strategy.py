@@ -5,16 +5,16 @@ Logic
 -----
 We watch the YES price on an "Up" market (e.g. "Will BTC be higher?").
 
-  BUY signal  → YES price < BUY_THRESHOLD  (market oversold given uptrend)
-  SELL signal → YES price > SELL_THRESHOLD (market overbought, take profit)
-  HOLD        → price in the neutral zone
+  BUY signal  -> YES price < BUY_THRESHOLD  (market oversold given uptrend)
+  SELL signal -> YES price > SELL_THRESHOLD (market overbought, take profit)
+  HOLD        -> price in the neutral zone
 
 Uptrend filter
 --------------
 Because mean-reversion on a "down" market is dangerous, we only BUY when
 a simple uptrend check passes: the current price recovered above the
 recent low by at least TREND_BUFFER, *or* we have no previous price data.
-The check is deliberately lightweight — a more sophisticated implementation
+The check is deliberately lightweight - a more sophisticated implementation
 could use a moving average from a time-series store.
 """
 
@@ -29,7 +29,7 @@ from typing import Optional
 
 BUY_THRESHOLD = 0.40    # enter when YES price drops here or below
 SELL_THRESHOLD = 0.60   # exit when YES price rises here or above
-TREND_BUFFER = 0.02     # price must be ≥ last_low + TREND_BUFFER to confirm uptrend
+TREND_BUFFER = 0.02     # price must be >= last_low + TREND_BUFFER to confirm uptrend
 MAX_POSITION_USD = 10.0  # max dollars allocated per open position
 
 
@@ -61,7 +61,7 @@ def evaluate(
 
     Parameters
     ----------
-    yes_price          Current probability for the YES outcome (0–1).
+    yes_price          Current probability for the YES outcome (0-1).
     has_open_position  Whether we already hold a position in this market.
     last_low           Lowest YES price observed in the recent window (optional).
                        Used for the lightweight uptrend filter.
@@ -76,7 +76,7 @@ def evaluate(
         return StrategyResult(
             signal=Signal.SELL,
             yes_price=yes_price,
-            reason=f"YES price {yes_price:.3f} ≥ SELL threshold {SELL_THRESHOLD}",
+            reason=f"YES price {yes_price:.3f} >= SELL threshold {SELL_THRESHOLD}",
         )
 
     # --- BUY check ---
@@ -86,7 +86,7 @@ def evaluate(
                 signal=Signal.HOLD,
                 yes_price=yes_price,
                 reason=(
-                    f"YES price {yes_price:.3f} ≤ BUY threshold but uptrend "
+                    f"YES price {yes_price:.3f} <= BUY threshold but uptrend "
                     f"not confirmed (last_low={last_low})"
                 ),
             )
@@ -94,7 +94,7 @@ def evaluate(
         return StrategyResult(
             signal=Signal.BUY,
             yes_price=yes_price,
-            reason=f"YES price {yes_price:.3f} ≤ BUY threshold {BUY_THRESHOLD}, uptrend confirmed",
+            reason=f"YES price {yes_price:.3f} <= BUY threshold {BUY_THRESHOLD}, uptrend confirmed",
             position_size_usd=size,
         )
 

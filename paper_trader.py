@@ -80,12 +80,12 @@ def _empty_state() -> dict:
 
 def load_state(path: str = DEFAULT_STATE_FILE) -> dict:
     if not os.path.exists(path):
-        log.info("No state file found at %s — starting fresh.", path)
+        log.info("No state file found at %s - starting fresh.", path)
         return _empty_state()
-    with open(path) as fh:
+    with open(path, encoding="utf-8") as fh:
         raw = fh.read().strip()
     if not raw:
-        log.info("State file %s is empty — starting fresh.", path)
+        log.info("State file %s is empty - starting fresh.", path)
         return _empty_state()
     state = json.loads(raw)
     # Ensure all keys exist in older state files
@@ -102,7 +102,7 @@ def load_state(path: str = DEFAULT_STATE_FILE) -> dict:
 
 def save_state(state: dict, path: str = DEFAULT_STATE_FILE) -> None:
     tmp = path + ".tmp"
-    with open(tmp, "w") as fh:
+    with open(tmp, "w", encoding="utf-8") as fh:
         json.dump(state, fh, indent=2)
     os.replace(tmp, path)   # atomic write
     log.debug("State saved to %s", path)
@@ -179,7 +179,7 @@ def open_position(state: dict, market: dict, result: StrategyResult) -> None:
     }
     state["open_positions"][market_id] = position
     log.info(
-        "OPENED  %s | %s @ %.3f | $%.2f → %.4f shares",
+        "OPENED  %s | %s @ %.3f | $%.2f -> %.4f shares",
         market["asset"], market_id, result.yes_price,
         result.position_size_usd, shares,
     )
@@ -211,7 +211,7 @@ def close_position(state: dict, market_id: str, exit_price: float) -> Optional[d
         _record_loss(state)
 
     log.info(
-        "CLOSED  %s | %s @ %.3f → %.3f | P/L $%.4f (%.2f%%) [%s]",
+        "CLOSED  %s | %s @ %.3f -> %.3f | P/L $%.4f (%.2f%%) [%s]",
         position["asset"], market_id,
         position["entry_price"], exit_price,
         pnl_usd, pnl_pct, outcome,
@@ -249,7 +249,7 @@ def process_market(state: dict, market: dict) -> None:
 
     if result.signal == Signal.BUY:
         if is_circuit_tripped(state):
-            log.warning("Circuit breaker is TRIPPED — skipping BUY for %s", market_id)
+            log.warning("Circuit breaker is TRIPPED - skipping BUY for %s", market_id)
             return
         open_position(state, market, result)
 

@@ -51,7 +51,7 @@ class PolymarketClient:
             except requests.RequestException as exc:
                 last_exc = exc
                 wait = 2 ** attempt
-                log.warning("GET %s attempt %d/%d failed: %s — retrying in %ds",
+                log.warning("GET %s attempt %d/%d failed: %s - retrying in %ds",
                             url, attempt, self.retry_attempts, exc, wait)
                 time.sleep(wait)
         raise RuntimeError(f"All {self.retry_attempts} attempts failed for {url}") from last_exc
@@ -99,12 +99,12 @@ class PolymarketClient:
 
         Returns a list of normalised market dicts with extra keys:
           asset        - 'BTC' | 'ETH' | 'SOL'
-          yes_price    - float, current YES outcome price (0–1)
-          no_price     - float, current NO outcome price (0–1)
+          yes_price    - float, current YES outcome price (0-1)
+          no_price     - float, current NO outcome price (0-1)
           yes_token_id - str, CLOB token id for YES leg
           no_token_id  - str, CLOB token id for NO leg
         """
-        log.info("Fetching all active markets from Gamma API…")
+        log.info("Fetching all active markets from Gamma API...")
         markets = self.get_all_active_markets()
         log.info("Total active markets fetched: %d", len(markets))
 
@@ -181,7 +181,7 @@ def _parse_prices(market: dict) -> tuple[Optional[float], Optional[float], Optio
     tokens: list[dict] = market.get("tokens", [])
     outcome_prices: list[str] = market.get("outcomePrices", [])
 
-    # Build a map outcome→(price, token_id)
+    # Build a map outcome -> (price, token_id)
     price_map: dict[str, tuple[float, str]] = {}
 
     for i, tok in enumerate(tokens):
